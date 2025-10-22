@@ -1,4 +1,4 @@
-class_name OceanSurface3D extends Node3D
+class_name OceanSurface3D extends MeshInstance3D
 
 @export_category("Simulation")
 @export var N := 128 # grid size (power of two). Higher = slower, more detail
@@ -22,8 +22,6 @@ class_name OceanSurface3D extends Node3D
 var _enable_debug_draw: bool = false
 
 # Mesh / visualization params
-@export var mesh_instance_path: NodePath
-var mesh_instance: MeshInstance3D
 var array_mesh: ArrayMesh
 
 var _time = 0.0
@@ -34,11 +32,6 @@ func _ready():
 	
 	if enable_debug_draw:
 		get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
-	
-	if mesh_instance_path:
-		mesh_instance = get_node(mesh_instance_path)
-	else:
-		mesh_instance = $MeshInstance3D if has_node("MeshInstance3D") else null
 
 	assert(is_power_of_two(N), "N must be a power of two for this FFT implementation")
 	
@@ -370,8 +363,7 @@ func _fft_1d(c_in: PackedVector2Array) -> PackedVector2Array:
 # -------------------- Mesh building & updating --------------------
 func _build_mesh():
 	array_mesh = ArrayMesh.new()
-	if mesh_instance:
-		mesh_instance.mesh = array_mesh
+	mesh = array_mesh
 	_create_flat_grid_mesh()
 
 func _create_flat_grid_mesh():
