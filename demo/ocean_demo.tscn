@@ -1,0 +1,115 @@
+[gd_scene load_steps=15 format=3 uid="uid://cuohn27yrj123"]
+
+[ext_resource type="Shader" uid="uid://dy8v0yisrw5l2" path="res://addons/Maris/shaders/water_ocean.gdshader" id="1_vi26y"]
+[ext_resource type="Script" uid="uid://bv1gu22rlvn1q" path="res://addons/Maris/scripts/ocean_surface_3d.gd" id="2_udxhk"]
+[ext_resource type="RDShaderFile" uid="uid://o405xkxpc1lr" path="res://addons/Maris/shaders/fft_butterfly.glsl" id="3_1bkmr"]
+[ext_resource type="PackedScene" uid="uid://clk8lcootr41f" path="res://core/objects/view.tscn" id="4_h3rpw"]
+[ext_resource type="PackedScene" uid="uid://dl2ed4gkybggf" path="res://core/objects/player.tscn" id="5_kphok"]
+[ext_resource type="Script" uid="uid://duwhkjw8p35h4" path="res://addons/Maris/scripts/buoyant_body_3d.gd" id="6_88k5l"]
+[ext_resource type="Script" uid="uid://cc8tileauw4ro" path="res://addons/Maris/demo/csg_ship_3d.gd" id="7_adqno"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h62pp"]
+
+[sub_resource type="Sky" id="Sky_47btn"]
+sky_material = SubResource("ProceduralSkyMaterial_h62pp")
+
+[sub_resource type="Environment" id="Environment_ia0ad"]
+background_mode = 2
+sky = SubResource("Sky_47btn")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nd08f"]
+render_priority = 0
+shader = ExtResource("1_vi26y")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/albedo_texture_size = Vector2i(0, 0)
+shader_parameter/point_size = 0.0
+shader_parameter/roughness = 0.0
+shader_parameter/metallic_texture_channel = Vector4(0, 0, 0, 0)
+shader_parameter/specular = 0.0
+shader_parameter/metallic = 0.0
+shader_parameter/uv1_scale = Vector3(0, 0, 0)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(0, 0, 0)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/min_height = -2.0
+shader_parameter/max_height = 2.0
+shader_parameter/deep_color = Color(3.3691526e-07, 0.19617271, 0.31493026, 1)
+shader_parameter/high_color = Color(0.16604331, 0.40173817, 0.43977237, 1)
+shader_parameter/foam_color = Color(1, 1, 1, 1)
+shader_parameter/min_alpha = 0.5
+shader_parameter/max_alpha = 0.9
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_i1fb6"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_vi26y"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vi26y"]
+size = Vector3(5, 5, 5)
+
+[node name="OceanDemo" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_ia0ad")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.9982502, -0.051289227, 0.029428322, 0, 0.49767044, 0.8673662, -0.059132148, -0.8658485, 0.49679962, 0, 3.16109, 0)
+
+[node name="Objects" type="Node3D" parent="."]
+
+[node name="Water" type="MeshInstance3D" parent="Objects"]
+material_override = SubResource("ShaderMaterial_nd08f")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_i1fb6")
+skeleton = NodePath("../..")
+script = ExtResource("2_udxhk")
+N = 32
+L = 100.0
+A = 100.0
+wind_vel = Vector2(50, 10)
+mesh_instance_path = NodePath(".")
+fft_butterfly_shader = ExtResource("3_1bkmr")
+
+[node name="View" parent="Objects" node_paths=PackedStringArray("target") instance=ExtResource("4_h3rpw")]
+transform = Transform3D(0.707107, -0.298836, 0.640856, 0, 0.906308, 0.422618, -0.707107, -0.298836, 0.640856, 0.34918022, 11.810816, -0.18450642)
+target = NodePath("../Player")
+
+[node name="Player" parent="Objects" node_paths=PackedStringArray("view") instance=ExtResource("5_kphok")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34918022, 11.810816, -0.18450642)
+view = NodePath("../View")
+
+[node name="Ship" type="RigidBody3D" parent="Objects"]
+mass = 500000.0
+script = ExtResource("6_88k5l")
+damping = 500.0
+voxel_size = 1.0
+metadata/_custom_type_script = "uid://duwhkjw8p35h4"
+
+[node name="Mesh" type="CSGCombiner3D" parent="Objects/Ship"]
+use_collision = true
+script = ExtResource("7_adqno")
+deck_size = Vector3(15, 2, 10)
+bow_subdivisions = 32
+bow_height = 5.0
+stern_subdivisions = 32
+hull_subdivisions = 51
+hull_height = 5.0
+hull_param = Vector2(5, 0.5)
+metadata/_custom_type_script = "uid://cc8tileauw4ro"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Objects/Ship"]
+shape = SubResource("ConvexPolygonShape3D_vi26y")
+
+[node name="Crate" type="RigidBody3D" parent="Objects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.308729, 26.198984, 0)
+mass = 100000.0
+script = ExtResource("6_88k5l")
+damping = 500.0
+voxel_size = 1.0
+adjust_initial_height = false
+metadata/_custom_type_script = "uid://duwhkjw8p35h4"
+
+[node name="Mesh" type="CSGBox3D" parent="Objects/Crate"]
+size = Vector3(5, 5, 5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Objects/Crate"]
+shape = SubResource("BoxShape3D_vi26y")

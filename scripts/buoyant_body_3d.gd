@@ -3,6 +3,8 @@ class_name BuoyantBody3D extends RigidBody3D
 @export var damping: float = 5.0
 @export var voxel_size: float = 0.5
 
+@export var adjust_initial_height = true
+
 class BuoyancyVoxel:
 	var position: Vector3
 	var height: float
@@ -17,14 +19,14 @@ func _ready():
 	#_generate_voxels()
 
 func _process(delta: float):
-	if _first_frame && !_water_surfaces.is_empty():
+	if adjust_initial_height && _first_frame && !_water_surfaces.is_empty():
 		position.y = _water_surfaces[0].get_height_at_world(global_position.x, global_position.z)
 		_first_frame = false
 	
 	for voxel in _voxels:
 		var from = global_transform * voxel.position
 		var to = global_transform * (voxel.position + Vector3(0, voxel.height, 0))
-		DebugDraw.draw_line_3d(from, to, Color.GREEN)
+		#DebugDraw.draw_line_3d(from, to, Color.GREEN)
 
 func _find_water_surfaces():
 	var surfaces_nodes = get_tree().get_nodes_in_group("WaterSurface")
@@ -39,7 +41,7 @@ func _find_water_surfaces():
 func _generate_voxels():
 	_voxels.clear()
 	
-	var aabb = $CSGCombiner3D.get_aabb()
+	var aabb = $Mesh.get_aabb()
 	var width = int(aabb.size.x / voxel_size)
 	var depth = int(aabb.size.z / voxel_size)
 	var total_voxel_count = width * depth
