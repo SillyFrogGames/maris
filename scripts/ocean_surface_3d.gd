@@ -38,6 +38,11 @@ func _ready():
 	_init_gpu_resources()
 	_init_cpu_resources()
 
+func _notification(what: int) -> void:
+	# Object destructor, triggered before the engine deletes this Node.
+	if what == NOTIFICATION_PREDELETE:
+		_clean_gpu_resources()
+
 func _process(delta: float):
 	if enable_debug_draw:
 		get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
@@ -47,6 +52,8 @@ func _process(delta: float):
 	_time += delta
 	_compute_spectrum()
 	simulate_frame(_time, delta)
+	
+	_gpu_process()
 
 func is_power_of_two(x: int) -> bool:
 	return x > 0 and (x & (x - 1)) == 0
@@ -452,15 +459,51 @@ func _update_mesh(height_field: PackedFloat32Array):
 
 var _rd: RenderingDevice
 
+var _fft_butterfly_shader: RID
 var _fft_butterfly_pipeline: RID
+var _fft_butterfly_storage_buffer: RID
 var _uniform_set: RID
 var _texture: RID
 
 func _init_gpu_resources():
 	_rd = RenderingServer.create_local_rendering_device()
 	
-	var fft_butterfly_shader = _load_shader(fft_butterfly_shader.resource_path)
-	_fft_butterfly_pipeline = _rd.compute_pipeline_create(fft_butterfly_shader)
+	var shader_file := load(fft_butterfly_shader.resource_path)
+	_fft_butterfly_shader = _rd.shader_create_from_spirv(shader_file.get_spirv())
+	_fft_butterfly_pipeline = _rd.compute_pipeline_create(_fft_butterfly_shader)
+	
+	var input := PackedFloat32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+	var input_bytes := input.to_byte_array()
+	_fft_butterfly_storage_buffer = _rd.storage_buffer_create(input_bytes.size(), input_bytes)
+
+	# Create a uniform to assign the buffer to the rendering device
+	var uniform := RDUniform.new()
+	uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	uniform.binding = 0 # this needs to match the "binding" in our shader file
+	uniform.add_id(_fft_butterfly_storage_buffer)
+	_uniform_set = _rd.uniform_set_create([uniform], _fft_butterfly_shader, 0) # the last parameter (the 0) needs to match the "set" in our shader file
+
+func _gpu_process():
+	#var compute_list := _rd.compute_list_begin()
+	#_rd.compute_list_bind_compute_pipeline(compute_list, _fft_butterfly_pipeline)
+	#_rd.compute_list_bind_uniform_set(compute_list, _uniform_set, 0)
+	#_rd.compute_list_dispatch(compute_list, 8, 1, 1)
+	#_rd.compute_list_end()
+	#
+	#_rd.submit()
+	#_rd.sync()
+	#
+	#var output_bytes := _rd.buffer_get_data(_fft_butterfly_storage_buffer)
+	#var output := output_bytes.to_float32_array()
+	#print("Input: ", input)
+	#print("Output: ", output)
+	pass
+
+func _clean_gpu_resources():
+	_rd.free_rid(_fft_butterfly_shader)
+	_rd.free_rid(_fft_butterfly_pipeline)
+	_rd.free_rid(_uniform_set)
+	_rd.free_rid(_texture)
 
 func _load_shader(resource_path: String) -> RID:
 	var shader_file := load(resource_path)

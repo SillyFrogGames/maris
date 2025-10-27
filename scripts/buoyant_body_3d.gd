@@ -25,8 +25,8 @@ func _process(delta: float):
 	
 	for voxel in _voxels:
 		var from = global_transform * voxel.position
-		var to = global_transform * (voxel.position + Vector3(0, voxel.height, 0))
-		#DebugDraw.draw_line_3d(from, to, Color.GREEN)
+		#var to = global_transform * (voxel.position + Vector3(0, voxel.height, 0))
+		#DebugDraw.draw_cube(from, voxel_size, Color.GREEN)
 
 func _find_water_surfaces():
 	var surfaces_nodes = get_tree().get_nodes_in_group("WaterSurface")

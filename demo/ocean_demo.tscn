@@ -1,10 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://cuohn27yrj123"]
+[gd_scene load_steps=11 format=3 uid="uid://cuohn27yrj123"]
 
 [ext_resource type="Shader" uid="uid://dy8v0yisrw5l2" path="res://addons/Maris/shaders/water_ocean.gdshader" id="1_vi26y"]
 [ext_resource type="Script" uid="uid://bv1gu22rlvn1q" path="res://addons/Maris/scripts/ocean_surface_3d.gd" id="2_udxhk"]
 [ext_resource type="RDShaderFile" uid="uid://o405xkxpc1lr" path="res://addons/Maris/shaders/fft_butterfly.glsl" id="3_1bkmr"]
 [ext_resource type="Script" uid="uid://duwhkjw8p35h4" path="res://addons/Maris/scripts/buoyant_body_3d.gd" id="6_88k5l"]
-[ext_resource type="Script" uid="uid://cc8tileauw4ro" path="res://addons/Maris/scripts/csg_ship_3d.gd" id="7_adqno"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h62pp"]
 
@@ -39,8 +38,6 @@ shader_parameter/max_alpha = 0.9
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_i1fb6"]
 
-[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_vi26y"]
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_vi26y"]
 size = Vector3(5, 5, 5)
 
@@ -65,30 +62,6 @@ L = 100.0
 A = 10.0
 fft_butterfly_shader = ExtResource("3_1bkmr")
 metadata/_custom_type_script = "uid://bv1gu22rlvn1q"
-
-[node name="Ship" type="RigidBody3D" parent="."]
-mass = 500000.0
-script = ExtResource("6_88k5l")
-damping = 500.0
-voxel_size = 1.0
-adjust_initial_height = false
-metadata/_custom_type_script = "uid://duwhkjw8p35h4"
-
-[node name="Mesh" type="CSGCombiner3D" parent="Ship"]
-use_collision = true
-script = ExtResource("7_adqno")
-deck_size = Vector3(15, 2, 10)
-bow_subdivisions = 32
-bow_height = 1.5
-stern_subdivisions = 32
-stern_height = 0.5
-hull_subdivisions = 51
-hull_height = 4.0
-hull_param = Vector2(10, 0.75)
-metadata/_custom_type_script = "uid://cc8tileauw4ro"
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ship"]
-shape = SubResource("ConvexPolygonShape3D_vi26y")
 
 [node name="Crate" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.057744, -15.510193, 0)
